@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>大家來找碴產生器</title>
+<style>
+:root{--bg:#f3f1ee;--bar:#fff;--ink:#1b1b1b;--line:#1b1b1b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#222;--bar:#2e2e2e;--ink:#eee;--line:#eee}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
+.bar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:12px 16px;background:var(--bar);border-bottom:2px solid var(--line)}
+.bar label{font-size:14px;display:flex;gap:6px;align-items:center}
+.bar input[type=number]{width:52px}
+.bar input[type=text]{width:90px}
+button{font:inherit;font-size:14px;padding:7px 14px;border:2px solid var(--line);background:var(--bar);color:var(--ink);border-radius:999px;cursor:pointer}
+button.main{background:var(--ink);color:var(--bar)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #888;outline-offset:2px}
+fieldset{border:2px solid var(--line);border-radius:12px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:6px 10px;margin:0}legend{font-size:13px;font-weight:700;padding:0 6px}
+.note{font-size:12.5px;opacity:.75;padding:8px 16px}
+.paper{padding:16px;overflow-x:auto}
+#stage svg{display:block;width:100%;max-width:1400px;height:auto;margin:0 auto;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.25)}
+@media print{.bar,.note{display:none}.paper{padding:0}#stage svg{max-width:none;box-shadow:none}@page{size:A4 landscape;margin:0}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <fieldset><legend>主角①</legend><label>名稱 <input id="nm" type="text" value="企鵝"></label>
+  <label>角色圖片 <input id="up" type="file" accept="image/*"></label>
+  <button id="reset" type="button">預設圖</button>
+  <label>低 <input id="n1" type="number" min="0" max="30" value="7"></label>
+  <label>中 <input id="n2" type="number" min="0" max="30" value="10"></label>
+  <label>高 <input id="n3" type="number" min="0" max="40" value="15"></label></fieldset>
+  <fieldset><legend>角色②（數量 0＝不出現）</legend><label>名稱 <input id="nm2" type="text" value="小熊"></label><label>圖片 <input id="up2" type="file" accept="image/*"></label><button id="reset2" type="button">預設圖</button><label>低 <input id="a1" type="number" min="0" max="30" value="0"></label><label>中 <input id="a2" type="number" min="0" max="30" value="0"></label><label>高 <input id="a3" type="number" min="0" max="40" value="0"></label></fieldset>
+  <fieldset><legend>角色③（數量 0＝不出現）</legend><label>名稱 <input id="nm3" type="text" value="小貓"></label><label>圖片 <input id="up3" type="file" accept="image/*"></label><button id="reset3" type="button">預設圖</button><label>低 <input id="b1" type="number" min="0" max="30" value="0"></label><label>中 <input id="b2" type="number" min="0" max="30" value="0"></label><label>高 <input id="b3" type="number" min="0" max="40" value="0"></label></fieldset>
+  <label>尺寸 <select id="ratio"><option value="a4">A4 橫式</option><option value="169">16:9</option></select></label>
+  <label><input id="ans" type="checkbox"> 顯示解答</label>
+  <button id="go" class="main" type="button">重新產生</button>
+  <button id="dl" type="button">下載 PNG</button>
+  <button id="pr" type="button">列印</button>
+</div>
+<div class="note">上傳角色圖後會自動轉成黑白線稿；每次按「重新產生」都是新的版面。勾選「顯示解答」可看到每隻角色的位置與編號。</div>
+<div class="paper"><div id="stage"></div></div>
+<script>
+const $=id=>document.getElementById(id);
+let heroURL=null,seed=(Date.now()%99991)+7,R;
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const rr=(a,b)=>a+R()*(b-a), pick=a=>a[Math.floor(R()*a.length)];
+const ST='fill="#fff" stroke="#111" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"';
+const eyes=(y=-12,d=17)=>`<circle cx="${-d}" cy="${y}" r="3.5" fill="#111" stroke="none"/><circle cx="${d}" cy="${y}" r="3.5" fill="#111" stroke="none"/>`;
+
+function heroInner0(){
+  if(heroURL)return `<clipPath id="hc"><ellipse rx="46" ry="54"/></clipPath><rect x="-46" y="-54" width="92" height="108" fill="#fff"/><image href="${heroURL}" x="-52" y="-60" width="104" height="120" preserveAspectRatio="xMidYMid slice" clip-path="url(#hc)"/><ellipse rx="46" ry="54" fill="none" stroke="#111" stroke-width="3.5"/>`;
+  return `<g ${ST} stroke-width="3.5"><ellipse rx="44" ry="52"/><ellipse cx="-42" cy="10" rx="8" ry="15" transform="rotate(12 -42 10)"/><ellipse cx="42" cy="10" rx="8" ry="15" transform="rotate(-12 42 10)"/><ellipse cy="30" rx="28" ry="17"/><ellipse cx="-25" cy="52" rx="13" ry="8"/><ellipse cx="25" cy="52" rx="13" ry="8"/><ellipse cy="-4" rx="11" ry="7"/></g>${eyes(-18)}<path d="M-11 -4h22" stroke="#111" stroke-width="2.5"/>`;
+}
+const CR0=[
+ ()=>`<g ${ST}><circle cx="-33" cy="-42" r="13"/><circle cx="33" cy="-42" r="13"/><ellipse rx="46" ry="50"/><ellipse cy="8" rx="9" ry="6"/></g>${eyes(-8,19)}`,
+ ()=>`<g ${ST}><path d="M-40 -20 L-34 -56 L-10 -40Z M40 -20 L34 -56 L10 -40Z"/><ellipse rx="48" ry="48"/><path d="M-48 2h-20M-48 12l-18 6M48 2h20M48 12l18 6"/></g>${eyes(-8,20)}<path d="M-5 6l5 5 5-5" fill="none" stroke="#111" stroke-width="2.5"/>`,
+ ()=>`<g ${ST}><path d="M-38 48 Q-50 -30 -20 -46 Q0 -54 22 -46 Q50 -30 38 48Z"/><path d="M-34 -22h68M-40 -4h80"/></g>${eyes(22,15)}`,
+ ()=>`<g ${ST}><path d="M-14 -42 L-28 -68 L0 -54 L28 -68 L14 -42Z"/><path d="M-38 40 Q-44 -34 0 -46 Q44 -34 38 40Z"/><path d="M-30 -14h60M-34 4h68"/></g>${eyes(20,14)}`,
+ ()=>`<g ${ST}><path d="M30 42 Q76 44 68 2 Q64 -16 52 -8"/><ellipse rx="44" ry="48"/><path d="M-20 -46l4-12 8 10M4 -48l6-12 6 12"/></g>${eyes(-6,18)}`,
+ ()=>`<g ${ST}><path d="M-46 52 Q-52 -50 0 -52 Q52 -50 46 52 Q30 42 22 52 Q0 40 -22 52 Q-34 42 -46 52Z"/></g>${eyes(-8,17)}<ellipse cy="10" rx="5" ry="7" fill="#111"/>`
+];
+const ACC=[
+ `<path d="M-30 -34 L-28 -66 L-8 -48Z M30 -34 L28 -66 L8 -48Z" ${ST}/>`,
+ `<path d="M-20 -48 L0 -84 L20 -48Z" ${ST}/><circle cy="-87" r="5" ${ST}/>`,
+ `<path d="M0 18 L-24 6 L-24 30Z M0 18 L24 6 L24 30Z" ${ST}/>`,
+ `<g ${ST} fill="none"><circle cx="-18" cy="-18" r="10"/><circle cx="18" cy="-18" r="10"/><path d="M-8 -18h16"/></g>`,
+ `<path d="M0 -52 Q-4 -76 -24 -68 Q-14 -52 0 -52Z" ${ST}/>`,
+ `<path d="M-32 -2 Q0 12 32 -2" fill="none" stroke="#111" stroke-width="7" stroke-linecap="round"/>`
+];
+const T=(x,y,s,rot,inner,f=1)=>`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot||0}) scale(${(s*f).toFixed(3)} ${s.toFixed(3)})">${inner}</g>`;
+
+function bush0(x,y,r){
+  const cs=[[0,0,.62],[-.55,.1,.45],[.55,.1,.45],[-.25,-.35,.45],[.3,-.33,.42],[0,.28,.45]].map(([a,b,c])=>[x+a*r,y+b*r,c*r]);
+  return `<g fill="#fff" stroke="#111" stroke-width="3">${cs.map(c=>`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${c[2].toFixed(1)}"/>`).join('')}</g><g fill="#fff">${cs.map(c=>`<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="${(c[2]-2).toFixed(1)}"/>`).join('')}</g><path d="M${x-r*.3} ${y-r*.1}q${r*.1} ${-r*.12} ${r*.2} 0M${x+r*.15} ${y+r*.12}q${r*.1} ${-r*.12} ${r*.2} 0" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>`;
+}
+const flower0=()=>`<g ${ST} stroke-width="2.5">${[0,72,144,216,288].map(a=>`<circle cx="${(9*Math.cos(a*Math.PI/180)).toFixed(1)}" cy="${(9*Math.sin(a*Math.PI/180)).toFixed(1)}" r="7"/>`).join('')}<circle r="4"/><path d="M0 12V30"/></g>`;
+const mush0=()=>`<g ${ST} stroke-width="2.5"><path d="M-7 20v-14h14v14z"/><path d="M-18 6Q-16 -14 0 -14Q16 -14 18 6Z"/><circle cx="-6" cy="-3" r="2"/><circle cx="6" cy="-5" r="2"/></g>`;
+const grass0=()=>`<path d="M-12 14Q-10 0 -14 -8M0 14Q0 -4 2 -14M12 14Q10 2 15 -6" fill="none" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>`;
+const stone0=()=>`<path d="M-16 8Q-14 -8 0 -8Q14 -8 16 8Z" ${ST} stroke-width="2.5"/>`;
+const leaf=()=>`<g ${ST} stroke-width="2.5"><path d="M0 14Q-18 0 0 -14Q18 0 0 14Z"/><path d="M0 14V-10"/></g>`;
+const star=()=>`<path d="M0 -14L4 -4L15 -4L6 3L9 14L0 7L-9 14L-6 3L-15 -4L-4 -4Z" ${ST} stroke-width="2.5"/>`;
+const cloud0=()=>`<path d="M-50 10Q-60 -8 -38 -10Q-34 -30 -10 -24Q10 -38 28 -18Q52 -18 50 10Z" ${ST}/>`;
+const tree0=()=>`<path d="M-24 150Q-18 60 -30 10M24 150Q18 60 30 10" fill="none" stroke="#111" stroke-width="3.5"/><path d="M-12 110Q-4 70 -8 40M8 120Q6 80 12 50" fill="none" stroke="#111" stroke-width="2"/>`;
+const f1=n=>n.toFixed(1);
+function heroInner(){
+  if(heroURL)return imgHero(heroURL,'hc');//`<clipPath id="hc"><ellipse rx="46" ry="54"/></clipPath><rect x="-46" y="-54" width="92" height="108" fill="#fff"/><image href="${heroURL}" x="-52" y="-60" width="104" height="120" preserveAspectRatio="xMidYMid slice" clip-path="url(#hc)"/><ellipse rx="46" ry="54" fill="none" stroke="#111" stroke-width="3.5"/>`;
+  return `<g ${ST} stroke-width="3"><path d="M0 -54C34 -54 50 -22 48 12C47 40 30 54 0 54C-30 54 -47 40 -48 12C-50 -22 -34 -54 0 -54Z"/><ellipse cx="-43" cy="14" rx="9" ry="16" transform="rotate(14 -43 14)"/><ellipse cx="43" cy="14" rx="9" ry="16" transform="rotate(-14 43 14)"/><ellipse cy="30" rx="30" ry="18"/><path d="M-36 52Q-26 44 -14 52Q-14 58 -26 58Q-36 58 -36 52ZM36 52Q26 44 14 52Q14 58 26 58Q36 58 36 52Z"/><path d="M-12 -6Q0 -12 12 -6Q12 6 0 8Q-12 6 -12 -6Z"/></g><path d="M-11 -2Q0 2 11 -2" fill="none" stroke="#111" stroke-width="2.5"/><path d="M-32 52v4M-26 53v4M32 52v4M26 53v4" stroke="#111" stroke-width="1.8"/><path d="M28 -38Q40 -24 40 -4" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="1 6"/>${eyes(-20)}<circle cx="30" cy="2" r="1.6" fill="#111"/>`;
+}
+const face=(y=-8,d=18,m=1)=>eyes(y,d).replace(/r="3.5"/g,'r="3.8"')+`<circle cx="${-d+1.2}" cy="${y-1.3}" r="1.2" fill="#fff" stroke="none"/><circle cx="${d+1.2}" cy="${y-1.3}" r="1.2" fill="#fff" stroke="none"/>`+(m?`<path d="M-5 ${y+9}q2.5 4 5 0q2.5 4 5 0" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round"/>`:'')+`<path d="M${-d-9} ${y+6}h8M${-d-8} ${y+9}h6M${d+1} ${y+6}h8M${d+2} ${y+9}h6" fill="none" stroke="#111" stroke-width="1.8" stroke-linecap="round"/>`;
+const EGG='M0 -52C38 -52 50 -24 48 8C46 38 32 52 0 52C-32 52 -46 38 -48 8C-50 -24 -38 -52 0 -52Z';
+const dots=a=>`<g fill="#111">${a.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="1.6"/>`).join('')}</g>`;
+const CR=[
+ ()=>`<g ${ST}><circle cx="-34" cy="-42" r="14"/><circle cx="34" cy="-42" r="14"/><path d="${EGG}"/><circle cx="-34" cy="-42" r="6"/><circle cx="34" cy="-42" r="6"/><ellipse cy="4" rx="14" ry="10"/><ellipse cx="-44" cy="20" rx="8" ry="12"/><ellipse cx="44" cy="20" rx="8" ry="12"/></g>${face(-10,19,0)}<ellipse rx="4" ry="3" fill="#111"/><path d="M0 3v5M-6 10q6 4 12 0" fill="none" stroke="#111" stroke-width="2"/>`,
+ ()=>`<g ${ST}><path d="M-44 -14L-40 -56L-12 -42M44 -14L40 -56L12 -42"/><path d="M-40 -46L-36 -34M40 -46L36 -34" fill="none"/><ellipse cy="2" rx="49" ry="46"/><path d="M-49 4h-18M-48 14l-16 7M49 4h18M48 14l16 7M44 40Q70 44 66 18" fill="none"/></g>${face(-6,20,0)}<path d="M-4 6l4 4 4-4" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round"/>`,
+ ()=>`<g ${ST}><path d="M-40 46Q-52 -22 -26 -44Q-12 -54 0 -50Q14 -54 28 -44Q52 -22 40 46Q0 54 -40 46Z"/><path d="M-36 -20Q-12 -10 0 -24Q12 -10 36 -20M-40 6Q0 18 40 6" fill="none"/></g>${dots([[-24,-34],[-8,-40],[14,-38],[28,-30],[-30,26],[30,30],[0,38]])}${face(18,15,1)}`,
+ ()=>`<g ${ST}><path d="M-14 -44L-30 -70L-4 -58L0 -76L8 -58L30 -70L14 -44Z"/><path d="M-40 44Q-48 -30 -10 -46Q0 -48 10 -46Q48 -30 40 44Q0 54 -40 44Z"/><path d="M-44 -10Q0 4 44 -10M-42 12Q0 26 42 12" fill="none"/></g>${dots([[-26,-28],[-8,-34],[20,-32],[32,30],[-34,30]])}${face(26,15,1)}`,
+ ()=>`<g ${ST}><path d="M32 40Q82 48 72 4Q68 -14 54 -6Q62 8 54 22"/><path d="M-6 -50L0 -64L8 -50M-22 -46L-20 -60L-10 -48M10 -48L16 -60L24 -44"/><path d="${EGG}"/></g>${face(-4,18,1)}`,
+ ()=>`<g ${ST}>${Array.from({length:14},(_,i)=>{const a=i*Math.PI/7;return `<circle cx="${f1(Math.cos(a)*42)}" cy="${f1(Math.sin(a)*42)}" r="11"/>`}).join('')}</g><circle r="44" fill="#fff"/>${face(-4,16,1)}`
+];
+function bush(x,y,r){
+  const cs=[[0,0,.6],[-.6,.12,.44],[.6,.12,.44],[-.32,-.34,.46],[.3,-.36,.44],[0,.3,.46],[-.9,.3,.3],[.9,.3,.3],[-.62,-.12,.34],[.62,-.1,.34]].map(([a,b,c])=>[x+a*r,y+b*r,c*r]);
+  const q=i=>((Math.sin(x*12.9+y*78.2+i*37.7)*43758.5)%1+1)%1;
+  let d='';for(let i=0;i<6;i++){const px=x+(q(i)-.5)*r*1.2,py=y+(q(i+9)-.4)*r*.75;d+=`M${f1(px)} ${f1(py)}q${f1(r*.07)} ${f1(-r*.15)} ${f1(r*.15)} 0M${f1(px+r*.04)} ${f1(py-r*.05)}v${f1(-r*.1)}`}
+  let b='';for(let i=0;i<2;i++)b+=`<circle cx="${f1(x+(q(i+20)-.5)*r)}" cy="${f1(y+(q(i+30)-.3)*r*.5)}" r="${f1(r*.06)}" fill="#fff" stroke="#111" stroke-width="2"/>`;
+  return `<path d="M${f1(x-r*.95)} ${f1(y+r*.8)}h${f1(r*1.9)}" stroke="#111" stroke-width="2.5" stroke-dasharray="2 8" stroke-linecap="round"/><g fill="#fff" stroke="#111" stroke-width="3">${cs.map(c=>`<circle cx="${f1(c[0])}" cy="${f1(c[1])}" r="${f1(c[2])}"/>`).join('')}</g><g fill="#fff">${cs.map(c=>`<circle cx="${f1(c[0])}" cy="${f1(c[1])}" r="${f1(c[2]-2)}"/>`).join('')}</g><path d="${d}" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round"/>${b}`;
+}
+const flower=()=>`<g ${ST} stroke-width="2.5"><path d="M0 8Q-2 22 0 34" fill="none"/><path d="M0 24Q-12 20 -14 12Q-4 12 0 24M0 28Q10 24 13 17Q4 16 0 28"/>${[0,60,120,180,240,300].map(a=>`<ellipse cy="-11" rx="6" ry="9" transform="rotate(${a})"/>`).join('')}<circle r="5"/></g><circle r="1.5" fill="#111"/>`;
+const tulip=()=>`<g ${ST} stroke-width="2.5"><path d="M0 34V8" fill="none"/><path d="M0 26Q-12 22 -12 12Q-2 14 0 26"/><path d="M-11 -8Q-12 8 0 10Q12 8 11 -8L5 -2L0 -12L-5 -2Z"/></g>`;
+const mush=()=>`<g ${ST} stroke-width="2.5"><path d="M-6 20Q-8 8 -6 4h12Q8 8 6 20Z"/><path d="M-20 6Q-18 -16 0 -16Q18 -16 20 6Q0 12 -20 6Z"/><path d="M-12 8L-6 10M0 10v3M12 8L6 10" fill="none"/><circle cx="-7" cy="-6" r="2.4"/><circle cx="6" cy="-8" r="2.4"/></g>`;
+const grass=()=>`<path d="M-14 14Q-14 2 -18 -6M-7 14Q-6 -2 -9 -14M0 14Q1 -4 4 -16M7 14Q8 0 14 -10M14 14Q14 4 20 -2" fill="none" stroke="#111" stroke-width="2.3" stroke-linecap="round"/>`;
+const stone=()=>`<g ${ST} stroke-width="2.5"><path d="M-20 10Q-18 -8 -2 -8Q14 -8 16 10Z"/><path d="M10 10Q12 0 20 0Q28 2 28 10Z"/><path d="M-8 -2l4 6M-4 4l5 1" fill="none"/></g>`;
+const cake=()=>`<g ${ST} stroke-width="2.5"><ellipse cy="14" rx="20" ry="6"/><path d="M-16 14V0Q0 6 16 0V14"/><ellipse rx="16" ry="5"/><circle cy="-8" r="5"/><path d="M0 -13q3 -5 6 -2" fill="none"/></g>`;
+const cup=()=>`<g ${ST} stroke-width="2.5"><path d="M-10 -6h20l-3 22h-14z"/><path d="M-12 -6h24M2 -6l6 -14" fill="none"/></g>`;
+const basket=()=>`<g ${ST} stroke-width="2.5"><path d="M-18 0h36l-5 18h-26z"/><path d="M-14 0Q0 -22 14 0M-16 7h32M-14 13h28" fill="none"/></g>`;
+const fish=()=>`<g ${ST} stroke-width="2.5"><path d="M-18 0Q-4 -12 10 0Q-4 12 -18 0ZM10 0L20 -8V8Z"/></g><circle cx="-10" cy="-2" r="1.6" fill="#111"/>`;
+const lantern=()=>`<g ${ST} stroke-width="2.5"><path d="M0 36V-6" fill="none"/><path d="M-10 -6h20l-3 -14h-14z"/><path d="M-8 -22L0 -30L8 -22"/></g>`;
+const books=()=>`<g ${ST} stroke-width="2.5"><rect x="-18" y="8" width="36" height="9"/><rect x="-14" y="-1" width="30" height="9"/><rect x="-16" y="-10" width="28" height="9"/></g>`;
+const sign=()=>`<g ${ST} stroke-width="2.5"><path d="M0 36V-10" fill="none"/><path d="M-20 -22h34l8 8l-8 8h-34z"/></g>`;
+const cloud=()=>{const c=[[-34,4,13],[-14,-8,18],[12,-8,20],[34,4,14],[0,6,16]];return `<g fill="#fff" stroke="#111" stroke-width="3">${c.map(a=>`<circle cx="${a[0]}" cy="${a[1]}" r="${a[2]}"/>`).join('')}</g><g fill="#fff">${c.map(a=>`<circle cx="${a[0]}" cy="${a[1]}" r="${a[2]-2}"/>`).join('')}</g><path d="M-22 -6q4 -7 11 -5M-6 4q4 -5 10 -3" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round"/>`};
+const tree=()=>`<path d="M-34 10Q-26 30 -24 60Q-20 100 -30 152Q-44 156 -56 152L56 152Q44 156 30 152Q20 100 24 60Q26 30 34 10Z" fill="#fff" stroke="#111" stroke-width="3.5" stroke-linejoin="round"/><path d="M-10 120Q-6 90 -10 62M8 130Q10 100 6 74M-2 50Q4 40 0 30M-18 140l-6 8M18 140l6 8" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round"/><ellipse cx="8" cy="96" rx="5" ry="8" fill="#fff" stroke="#111" stroke-width="2"/>`;
+const ground=[flower,flower,tulip,mush,grass,grass,stone,leaf,cake,cup,basket,fish,lantern,books,sign];
+
+function scene(w,h,lv,n){
+  const C=[{s:1.1,dec:5,fk:0,cl:12,bu:3,hid:0,rot:0,av:1},{s:.74,dec:11,fk:2,cl:32,bu:7,hid:.4,rot:12,av:.55},{s:.54,dec:18,fk:7,cl:58,bu:13,hid:.75,rot:26,av:0}][lv];
+  const s=C.s*Math.min(1,w/440), key=[], items=[], ans=[];
+  const ok=(x,y,d)=>key.every(k=>Math.hypot(k[0]-x,(k[1]-y)*1.15)>=d);
+  const place=(sz,gap)=>{let d=sz*gap;for(let t=0;t<400;t++){const x=rr(sz*.7,w-sz*.7),y=rr(h*.16+sz*.6,h-sz*.7);if(ok(x,y,d))return[x,y];if(t%50==49)d*=.88}return[rr(sz,w-sz),rr(h*.2,h-sz)]};
+  // background
+  items.push([-999,T(w*.14,h*.14,1.1,0,tree()).replace('</g>','')+`${bush(0,-20,95)}</g>`]);
+  if(lv>0)items.push([-998,T(w*.88,h*.1,.8,0,tree()).replace('</g>','')+`${bush(0,-20,95)}</g>`]);
+  for(let i=0;i<2+lv;i++)items.push([-997,T(rr(40,w-40),rr(18,h*.16),rr(.5,.8),0,cloud())]);
+  items.push([-995,`<path d="M0 ${h*.3} Q${w*.3} ${h*.26} ${w*.6} ${h*.31} T${w} ${h*.28}" fill="none" stroke="#111" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round"/>`]);
+  for(let i=0;i<24+lv*16;i++)items.push([-990,T(rr(0,w),rr(h*.3,h),rr(.35,.6),rr(-12,12),grass())]);
+  // penguins
+  const L=[];n.forEach((c,k)=>{for(let j=0;j<c;j++)L.push(k)});L.sort(()=>R()-.5);const vq=n.map(c=>Math.max(0,Math.min(c-1,Math.round(C.fk*c/Math.max(1,L.length))))),V=new Set();L.forEach((kk,i)=>{if(vq[kk]>0){V.add(i);vq[kk]--}});
+  for(let i=0;i<L.length;i++){const hk=L[i];
+    const [x,y]=place(104*s,1.15);key.push([x,y]);
+    const f=lv?(R()<.5?-1:1):1, rot=rr(-C.rot,C.rot), hid=R()<C.hid;
+    items.push([y+52*s,T(x,y,s,rot,`<use href='#hero${hk?hk+1:''}'/>${V.has(i)?pick(ACC):''}`,f)]);
+    if(hid){const br=(lv==2?46:40)*s*(R()*.3+.9),by=y+(lv==2?46:54)*s;items.push([y+90*s,bush(x+rr(-8,8)*s,by,br).replace(/^/,'')])}
+    ans.push([x,y,hk]);
+  }
+  // other creatures & fakes
+  for(let i=0;i<C.dec;i++){
+    const sz=s*rr(.85,1.15),[x,y]=place(104*sz,1.05);key.push([x,y]);
+    const fake=i>=C.dec, f=R()<.5?-1:1;
+    const inner=fake?`<use href='#hero${pk()}'/>${pick(ACC)}`:pickCR()();
+    items.push([y+50*sz,T(x,y,sz,fake?rr(-C.rot,C.rot):0,inner,f)]);
+  }
+  // bushes & clutter
+  for(let i=0;i<C.bu;i++){const r=rr(38,64)*(lv==2?.8:1);for(let t=0;t<80;t++){const x=rr(0,w),y=rr(h*.3,h);if(ok(x,y,r*.9+52*s)){items.push([y+r*.3,bush(x,y,r)]);break}}}
+  for(let i=0;i<C.cl;i++){const z=rr(.7,1.15)*(lv==0?1.2:1);for(let t=0;t<40;t++){const x=rr(10,w-10),y=rr(h*.3,h-10);if(C.av==0||ok(x,y,C.av*60*s+16)){items.push([y+10,T(x,y,z,rr(-10,10),pick(ground)())]);break}}}
+  items.sort((a,b)=>a[0]-b[0]);
+  const rad=60*s;GOT=ans.reduce((a,p)=>(a[p[2]]++,a),[0,0,0]);
+  const a=ans.map((p,i)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${rad.toFixed(1)}" fill="none" stroke="#111" stroke-width="5" stroke-dasharray="${DA[p[2]]}"/><circle cx="${(p[0]+rad*.78).toFixed(1)}" cy="${(p[1]-rad*.78).toFixed(1)}" r="16" fill="#111"/><text x="${(p[0]+rad*.78).toFixed(1)}" y="${(p[1]-rad*.78+5).toFixed(1)}" font-size="13" font-weight="700" text-anchor="middle" fill="#fff">${'ABC'[p[2]]}${i+1}</text>`).join('');
+  return items.map(i=>i[1]).join('')+`<g class="ans">${a}</g>`;
+}
+
+function build0(){
+  R=rng(seed);
+  const [W,H]=$('ratio').value=='a4'?[1400,990]:[1600,900];
+  const m=26,gap=20,hh=118,pw=(W-2*m-2*gap)/3,top=m+hh+8,ph=H-top-m,lab=66,box=62,sh=ph-lab-box-8;
+  const name=$('nm').value||'角色',ns=[+$('n1').value,+$('n2').value,+$('n3').value];
+  const lv=[['★ 初級','適合 1–2 年級'],['★★ 中級','適合 3–4 年級'],['★★★ 進階','適合 5–6 年級']];
+  let o=`<svg xmlns="http://www.w3.org/2000/svg" id="art" viewBox="0 0 ${W} ${H}" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif"><style>.ans{display:none}.show .ans{display:inline}</style><defs><g id="hero">${heroInner()}</g></defs>
+  <rect width="${W}" height="${H}" fill="#fff"/><rect x="8" y="8" width="${W-16}" height="${H-16}" rx="26" fill="none" stroke="#111" stroke-width="4"/>
+  <rect x="${W/2-420}" y="${m-6}" width="840" height="${hh-8}" rx="48" fill="#fff" stroke="#111" stroke-width="4"/>
+  <text x="${W/2}" y="${m+48}" font-size="48" font-weight="900" text-anchor="middle">大家來找碴！☆ 角落生物篇 ☆</text>
+  <text x="${W/2}" y="${m+88}" font-size="27" font-weight="700" text-anchor="middle">找找看，圖中藏了幾隻「${name}」？找到後圈起來或塗上顏色！</text>
+  ${T(m+70,m+50,.9,-6,'<use href="#hero"/>')}${T(W-m-70,m+50,.9,6,'<use href="#hero"/>',-1)}`;
+  for(let i=0;i<3;i++){
+    const x=m+i*(pw+gap);
+    o+=`<clipPath id="cp${i}"><rect width="${pw}" height="${sh}"/></clipPath>
+    <rect x="${x}" y="${top}" width="${pw}" height="${ph}" rx="22" fill="#fff" stroke="#111" stroke-width="3.5"/>
+    <text x="${x+pw/2}" y="${top+32}" font-size="28" font-weight="900" text-anchor="middle">${lv[i][0]}</text>
+    <text x="${x+pw/2}" y="${top+57}" font-size="18" font-weight="700" text-anchor="middle">${lv[i][1]}</text>
+    <g transform="translate(${x} ${top+lab})"><rect width="${pw}" height="${sh}" fill="#fff" stroke="#111" stroke-width="3"/><g clip-path="url(#cp${i})">${scene(pw,sh,i,ns[i])}</g></g>
+    <text x="${x+pw/2}" y="${top+lab+sh+27}" font-size="20" font-weight="700" text-anchor="middle">找到的${name}有幾隻？</text>
+    <rect x="${x+pw/2-92}" y="${top+lab+sh+34}" width="100" height="26" rx="10" fill="#fff" stroke="#111" stroke-width="3"/>
+    <text x="${x+pw/2+22}" y="${top+lab+sh+56}" font-size="24" font-weight="900">/ ${ns[i]}</text>`;
+  }
+  o+='</svg>';
+  $('stage').innerHTML=o; toggle();
+}
+function toggle(){const s=$('art');if(s)s.classList.toggle('show',$('ans').checked)}
+
+// character upload → black/white line art
+function lineArt0(img){
+  const w=160,h=176,c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+  const sc=Math.max(w/img.width,h/img.height),dw=img.width*sc,dh=img.height*sc;
+  x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,(w-dw)/2,(h-dh)/2,dw,dh);
+  const d=x.getImageData(0,0,w,h),g=new Float32Array(w*h);
+  for(let i=0;i<w*h;i++)g[i]=.3*d.data[i*4]+.59*d.data[i*4+1]+.11*d.data[i*4+2];
+  const o=x.createImageData(w,h);
+  for(let j=0;j<h;j++)for(let i=0;i<w;i++){
+    let v=255;
+    if(i>0&&j>0&&i<w-1&&j<h-1){
+      const a=g[(j-1)*w+i-1],b=g[(j-1)*w+i],c2=g[(j-1)*w+i+1],dd=g[j*w+i-1],f=g[j*w+i+1],gg=g[(j+1)*w+i-1],hh=g[(j+1)*w+i],ii=g[(j+1)*w+i+1];
+      const gx=c2+2*f+ii-a-2*dd-gg,gy=gg+2*hh+ii-a-2*b-c2;
+      if(Math.hypot(gx,gy)>70||g[j*w+i]<55)v=0;
+    }
+    const k=(j*w+i)*4;o.data[k]=o.data[k+1]=o.data[k+2]=v;o.data[k+3]=255;
+  }
+  x.putImageData(o,0,0);return c.toDataURL('image/png');
+}
+$('up').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{heroURL=lineArt(im);build()};im.src=r.result};r.readAsDataURL(f)};
+$('reset').onclick=()=>{heroURL=null;$('up').value='';build()};
+$('go').onclick=()=>{seed=(seed*7919+Math.floor(Math.random()*9999))%999983;build()};
+['nm','n1','n2','n3','nm2','a1','a2','a3','nm3','b1','b2','b3','ratio'].forEach(i=>$(i).onchange=build);
+let heroURL2=null,heroURL3=null,GOT=[0,0,0],ACT=[true,false,false];
+function lineArt(img){
+  const w=208,h=228,K=5,LR=2.2,c=document.createElement('canvas');c.width=w;c.height=h;const cx=c.getContext('2d',{willReadFrequently:true});
+  cx.fillStyle='#fff';cx.fillRect(0,0,w,h);
+  const sc=Math.min((w-16)/img.width,(h-16)/img.height),dw=img.width*sc,dh=img.height*sc;
+  cx.drawImage(img,(w-dw)/2,(h-dh)/2,dw,dh);
+  const D=cx.getImageData(0,0,w,h).data,n=w*h,bg=new Uint8Array(n),sr=new Int16Array(n*3),Q=[];
+  const push=(i,r,g,b)=>{if(bg[i])return;const k=i*4;if(Math.abs(D[k]-r)+Math.abs(D[k+1]-g)+Math.abs(D[k+2]-b)>90)return;bg[i]=1;sr[i*3]=r;sr[i*3+1]=g;sr[i*3+2]=b;Q.push(i)};
+  for(let i=0;i<w;i++)[i,(h-1)*w+i].forEach(p=>push(p,D[p*4],D[p*4+1],D[p*4+2]));
+  for(let j=0;j<h;j++)[j*w,j*w+w-1].forEach(p=>push(p,D[p*4],D[p*4+1],D[p*4+2]));
+  for(let qi=0;qi<Q.length;qi++){const i=Q[qi],x=i%w,y=(i/w)|0,r=sr[i*3],g=sr[i*3+1],b=sr[i*3+2];if(x>0)push(i-1,r,g,b);if(x<w-1)push(i+1,r,g,b);if(y>0)push(i-w,r,g,b);if(y<h-1)push(i+w,r,g,b)}
+  const lum=i=>.3*D[i*4]+.59*D[i*4+1]+.11*D[i*4+2],F=[];
+  for(let i=0;i<n;i++)if(!bg[i])F.push(i);
+  if(F.length<50)return c.toDataURL('image/png');
+  F.sort((a,b)=>lum(a)-lum(b));
+  let C=[.04,.25,.5,.75,.96].map(q=>{const i=F[Math.floor(q*(F.length-1))];return[D[i*4],D[i*4+1],D[i*4+2]]});
+  const lab=new Int8Array(n).fill(-1),lumC=j=>.3*C[j][0]+.59*C[j][1]+.11*C[j][2];
+  for(let it=0;it<8;it++){
+    const S=C.map(()=>[0,0,0,0]);
+    for(const i of F){let b=0,bd=1e9;C.forEach((k,j)=>{const d=(D[i*4]-k[0])**2+(D[i*4+1]-k[1])**2+(D[i*4+2]-k[2])**2;if(d<bd){bd=d;b=j}});lab[i]=b;const s=S[b];s[0]+=D[i*4];s[1]+=D[i*4+1];s[2]+=D[i*4+2];s[3]++}
+    C=C.map((k,j)=>S[j][3]?[S[j][0]/S[j][3],S[j][1]/S[j][3],S[j][2]/S[j][3]]:k);
+  }
+  for(let p=0;p<2;p++){const L2=lab.slice();for(const i of F){const x=i%w,y=(i/w)|0,cnt={};let b=lab[i],bc=0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=w||yy>=h)continue;const l=lab[yy*w+xx];if(l<0)continue;cnt[l]=(cnt[l]||0)+1;if(cnt[l]>bc){bc=cnt[l];b=l}}L2[i]=b}lab.set(L2)}
+  const nb=p=>{const x=p%w;return[x>0?p-1:-1,x<w-1?p+1:-1,p>=w?p-w:-1,p<n-w?p+w:-1]};
+  const comps=()=>{const seen=new Uint8Array(n),res=[];for(const i of F){if(seen[i])continue;const l=lab[i],q=[i],m=[];seen[i]=1;while(q.length){const p=q.pop();m.push(p);nb(p).forEach(t=>{if(t>=0&&!seen[t]&&lab[t]==l){seen[t]=1;q.push(t)}})}res.push(m)}return res};
+  for(const m of comps()){if(m.length>=35)continue;const cnt={};let b=-1,bc=0;for(const p of m)nb(p).forEach(t=>{if(t<0)return;const l=lab[t];if(l<0||l==lab[p])return;cnt[l]=(cnt[l]||0)+1;if(cnt[l]>bc){bc=cnt[l];b=l}});if(b>=0)m.forEach(p=>lab[p]=b)}
+  const B=new Uint8Array(n),o=cx.createImageData(w,h);
+  for(const m of comps())if(lumC(lab[m[0]])<90&&m.length<450)m.forEach(p=>B[p]=1);
+  for(const i of F){const k=i*4,v=B[i]?17:255;o.data[k]=o.data[k+1]=o.data[k+2]=v;o.data[k+3]=255}
+  cx.clearRect(0,0,w,h);cx.putImageData(o,0,0);
+  cx.fillStyle='#111';cx.beginPath();
+  for(const i of F){const x=i%w,y=(i/w)|0,l=lab[i];const e=t=>{const q=lab[t];return q<0||q<l};if(x==0||y==0||x==w-1||y==h-1||e(i-1)||e(i+1)||e(i-w)||e(i+w)){cx.moveTo(x+LR,y);cx.arc(x,y,LR,0,6.2832)}}
+  cx.fill();return c.toDataURL('image/png');
+}
+const imgHero=(u,id)=>`<image href='${u}' x='-52' y='-57' width='104' height='114'/>`;
+function lineArt1(img){
+  const w=160,h=176,c=document.createElement('canvas');c.width=w;c.height=h;const cx=c.getContext('2d');
+  cx.fillStyle='#fff';cx.fillRect(0,0,w,h);
+  const sc=Math.min(w/img.width,h/img.height),dw=img.width*sc,dh=img.height*sc;
+  cx.drawImage(img,(w-dw)/2,(h-dh)/2,dw,dh);
+  const D=cx.getImageData(0,0,w,h).data,n=w*h,g=new Float32Array(n),bg=new Uint8Array(n),sr=new Int16Array(n*3),Q=[];
+  for(let i=0;i<n;i++)g[i]=.3*D[i*4]+.59*D[i*4+1]+.11*D[i*4+2];
+  const push=(i,r,gg,b)=>{if(bg[i])return;const k=i*4;if(Math.abs(D[k]-r)+Math.abs(D[k+1]-gg)+Math.abs(D[k+2]-b)>90)return;bg[i]=1;sr[i*3]=r;sr[i*3+1]=gg;sr[i*3+2]=b;Q.push(i)};
+  for(let i=0;i<w;i++)[i,(h-1)*w+i].forEach(p=>push(p,D[p*4],D[p*4+1],D[p*4+2]));
+  for(let j=0;j<h;j++)[j*w,j*w+w-1].forEach(p=>push(p,D[p*4],D[p*4+1],D[p*4+2]));
+  for(let qi=0;qi<Q.length;qi++){const i=Q[qi],x0=i%w,y0=(i/w)|0,r=sr[i*3],gg=sr[i*3+1],b=sr[i*3+2];
+    if(x0>0)push(i-1,r,gg,b);if(x0<w-1)push(i+1,r,gg,b);if(y0>0)push(i-w,r,gg,b);if(y0<h-1)push(i+w,r,gg,b)}
+  const o=cx.createImageData(w,h),isbg=(i,j)=>i<0||j<0||i>=w||j>=h||bg[j*w+i];
+  for(let j=0;j<h;j++)for(let i=0;i<w;i++){
+    const p=j*w+i,k=p*4;
+    if(bg[p]){o.data[k+3]=0;continue}
+    let v=255;
+    for(let dy=-5;dy<=5&&v;dy++)for(let dx=-5;dx<=5;dx++)if(isbg(i+dx,j+dy)){v=0;break}
+    if(v&&i>0&&j>0&&i<w-1&&j<h-1){
+      const a=g[p-w-1],b=g[p-w],c2=g[p-w+1],dd=g[p-1],f=g[p+1],gg=g[p+w-1],hh=g[p+w],ii=g[p+w+1];
+      const gx=c2+2*f+ii-a-2*dd-gg,gy=gg+2*hh+ii-a-2*b-c2;
+      if(Math.hypot(gx,gy)>70||g[p]<55)v=0;
+    }
+    o.data[k]=o.data[k+1]=o.data[k+2]=v;o.data[k+3]=255;
+  }
+  cx.clearRect(0,0,w,h);cx.putImageData(o,0,0);return c.toDataURL('image/png');
+}
+const DA=['10 6','1 0','3 5'];
+const imgHero0=(u,id)=>`<clipPath id='${id}'><ellipse rx='46' ry='54'/></clipPath><rect x='-46' y='-54' width='92' height='108' fill='#fff'/><image href='${u}' x='-52' y='-60' width='104' height='120' preserveAspectRatio='xMidYMid slice' clip-path='url(#${id})'/><ellipse rx='46' ry='54' fill='none' stroke='#111' stroke-width='3.5'/>`;
+const hero2in=()=>heroURL2?imgHero(heroURL2,'hc2'):CR[0](),hero3in=()=>heroURL3?imgHero(heroURL3,'hc3'):CR[1]();
+const pickCR=()=>{const ex=[];if(ACT[1]&&!heroURL2)ex.push(0);if(ACT[2]&&!heroURL3)ex.push(1);return CR[pick([0,1,2,3,4,5].filter(i=>!ex.includes(i)))]};
+const pk=()=>{const a=[0,1,2].filter(k=>ACT[k]);const k=a.length?pick(a):0;return k?k+1:''};
+const upl=(id,rid,set)=>{$(id).onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{set(lineArt(im));build()};im.src=r.result};r.readAsDataURL(f)};$(rid).onclick=()=>{set(null);$(id).value='';build()}};
+upl('up2','reset2',v=>heroURL2=v);upl('up3','reset3',v=>heroURL3=v);
+function build(){
+  R=rng(seed);
+  const [W,H]=$('ratio').value=='a4'?[1400,990]:[1600,900];
+  const N=[['n1','n2','n3'],['a1','a2','a3'],['b1','b2','b3']].map(r=>r.map(i=>Math.max(0,Math.min(40,Math.floor(+$(i).value||0)))));
+  ACT=N.map(r=>r.some(v=>v>0));
+  const nm=[$('nm').value||'角色①',$('nm2').value||'角色②',$('nm3').value||'角色③'];
+  const hid=k=>'hero'+(k?k+1:''),act=[0,1,2].filter(k=>ACT[k]);
+  const rows=Math.max(1,...[0,1,2].map(l=>N.filter(r=>r[l]>0).length));
+  const m=26,gap=20,hh=118,pw=(W-2*m-2*gap)/3,top=m+hh+8,ph=H-top-m,lab=66,box=rows*32+84,sh=ph-lab-box-8;
+  const lv=[['★ 初級','適合 1–2 年級'],['★★ 中級','適合 3–4 年級'],['★★★ 進階','適合 5–6 年級']];
+  const names=act.length?act.map(k=>nm[k]).join('、'):'角色';
+  let o=`<svg xmlns='http://www.w3.org/2000/svg' id='art' viewBox='0 0 ${W} ${H}' font-family='Noto Sans TC,PingFang TC,Microsoft JhengHei,sans-serif'><style>.ans{display:none}.show .ans{display:inline}</style><defs><g id='hero'>${heroInner()}</g><g id='hero2'>${hero2in()}</g><g id='hero3'>${hero3in()}</g></defs><rect width='${W}' height='${H}' fill='#fff'/><rect x='8' y='8' width='${W-16}' height='${H-16}' rx='26' fill='none' stroke='#111' stroke-width='4'/><rect x='${W/2-420}' y='${m-6}' width='840' height='${hh-8}' rx='48' fill='#fff' stroke='#111' stroke-width='4'/><text x='${W/2}' y='${m+48}' font-size='48' font-weight='900' text-anchor='middle'>大家來找碴！☆ 角落生物篇 ☆</text><text x='${W/2}' y='${m+88}' font-size='23' font-weight='700' text-anchor='middle'>找找看，圖中藏了幾隻「${names}」？戴著配件的也要算喔！找到後圈起來！</text>${T(m+70,m+50,.9,-6,`<use href='#${hid(act[0]||0)}'/>`)}${T(W-m-70,m+50,.9,6,`<use href='#${hid(act.length?act[act.length-1]:0)}'/>`,-1)}`;
+  for(let i=0;i<3;i++){
+    const x=m+i*(pw+gap),sc=scene(pw,sh,i,[N[0][i],N[1][i],N[2][i]]),got=GOT.slice(),tot=got[0]+got[1]+got[2];
+    o+=`<clipPath id='cp${i}'><rect width='${pw}' height='${sh}'/></clipPath><rect x='${x}' y='${top}' width='${pw}' height='${ph}' rx='22' fill='#fff' stroke='#111' stroke-width='3.5'/><text x='${x+pw/2}' y='${top+32}' font-size='28' font-weight='900' text-anchor='middle'>${lv[i][0]}</text><text x='${x+pw/2}' y='${top+57}' font-size='18' font-weight='700' text-anchor='middle'>${lv[i][1]}</text><g transform='translate(${x} ${top+lab})'><rect width='${pw}' height='${sh}' fill='#fff' stroke='#111' stroke-width='3'/><g clip-path='url(#cp${i})'>${sc}</g></g>`;
+    const y0=top+lab+sh+26;
+    o+=`<text x='${x+pw/2}' y='${y0}' font-size='20' font-weight='700' text-anchor='middle'>找到的角色各有幾隻？</text>`;
+    let r=0;
+    [0,1,2].forEach(k=>{if(!got[k])return;const y=y0+8+r*32;o+=`${T(x+38,y+16,.27,0,`<use href='#${hid(k)}'/>`)}<text x='${x+66}' y='${y+23}' font-size='19' font-weight='700'>${nm[k]}</text><rect x='${x+pw-150}' y='${y+3}' width='62' height='26' rx='9' fill='#fff' stroke='#111' stroke-width='2.5'/><text x='${x+pw-76}' y='${y+25}' font-size='22' font-weight='900'>/ ${got[k]}</text>`;r++});
+    o+=`<path d='M${x+24} ${y0+10+r*32}h${pw-48}' stroke='#111' stroke-width='2' stroke-dasharray='3 6'/><text x='${x+pw/2}' y='${y0+38+r*32}' font-size='24' font-weight='900' text-anchor='middle'>全部共 ${tot} 隻</text>`;
+  }
+  o+='</svg>';
+  $('stage').innerHTML=o;toggle();
+}
+$('ans').onchange=toggle;
+$('pr').onclick=()=>window.print();
+$('dl').onclick=()=>{
+  const s=$('art'),vb=s.viewBox.baseVal,xml=new XMLSerializer().serializeToString(s),img=new Image();
+  img.onload=()=>{const c=document.createElement('canvas');c.width=vb.width*2;c.height=vb.height*2;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);c.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=$('ans').checked?'找碴-解答.png':'找碴.png';a.click()})};
+  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(xml);
+};
+build();
+</script>
+</body>
+</html>
