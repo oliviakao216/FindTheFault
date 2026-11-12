@@ -36,6 +36,7 @@ fieldset{border:2px solid var(--line);border-radius:12px;display:flex;flex-wrap:
 </style>
 </head>
 <body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NTDV7VBP" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div class="bar">
   <label>標題 <input id="ttl" type="text" value="大家來找碴！☆ 角落生物篇 ☆" style="width:240px"></label><fieldset><legend>主角①</legend><label>名稱 <input id="nm" type="text" value="" placeholder="可留空"></label>
   <label>角色圖片 <input id="up" type="file" accept="image/*"></label>
@@ -346,9 +347,10 @@ $('dl').onclick=()=>{
 const SK='findPenguinV2',NID=['n1','n2','n3','a1','a2','a3','b1','b2','b3'];
 function save(){try{localStorage.setItem(SK,JSON.stringify({n:[$('nm').value,$('nm2').value,$('nm3').value],u:[heroURL,heroURL2,heroURL3],c:NID.map(i=>$(i).value),t:$('ttl').value}))}catch(e){}}
 function load(){try{const d=JSON.parse(localStorage.getItem(SK)||'null');if(!d)return;$('nm').value=d.n[0]||'';$('nm2').value=d.n[1]||'';$('nm3').value=d.n[2]||'';if(d.t!=null)$('ttl').value=d.t;heroURL=d.u[0]||null;heroURL2=d.u[1]||null;heroURL3=d.u[2]||null;if(d.c&&d.c.length==9)NID.forEach((i,j)=>$(i).value=d.c[j])}catch(e){}}
-const GA_ID='';/* 在此填入你的 GA4 評估 ID，格式 G-XXXXXXXXXX */
+const GTM_ID='GTM-NTDV7VBP',GA_ID='G-QDEPCB2KJY';
+(function(w,d,s,l,i){if(!/^GTM-[A-Z0-9]+$/.test(i))return;w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});const f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i;f.parentNode.insertBefore(j,f)})(window,document,'script','dataLayer',GTM_ID);/* 在此填入你的 GA4 評估 ID，格式 G-XXXXXXXXXX */
 (function(){if(!/^G-[A-Z0-9]{6,}$/.test(GA_ID))return;const s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID;document.head.appendChild(s);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config',GA_ID)})();
-const track=(n,p)=>{try{if(window.gtag)gtag('event',n,p||{})}catch(e){}};
+const track=(n,p)=>{try{if(window.gtag)gtag('event',n,p||{});(window.dataLayer=window.dataLayer||[]).push(Object.assign({event:n},p||{}))}catch(e){}};
 ['go','dl','pr'].forEach(id=>$(id).addEventListener('click',()=>track('worksheet_'+id)));
 ['up','up2','up3'].forEach(id=>$(id).addEventListener('change',()=>track('character_upload')));
 load();build();
