@@ -17,29 +17,31 @@ button{font:inherit;font-size:14px;padding:7px 14px;border:2px solid var(--line)
 button.main{background:var(--ink);color:var(--bar)}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #888;outline-offset:2px}
 fieldset{border:2px solid var(--line);border-radius:12px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:6px 10px;margin:0}legend{font-size:13px;font-weight:700;padding:0 6px}
+.fbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:4px 16px 0;font-size:14px}.fb{display:inline-flex;gap:6px;align-items:center;padding:5px 12px}.fb i{width:12px;height:12px;border-radius:50%;display:inline-block}.fb.on{background:var(--ink);color:var(--bar)}
 .note{font-size:12.5px;opacity:.75;padding:8px 16px}
 .paper{padding:16px;overflow-x:auto}
 #stage svg{display:block;width:100%;max-width:1400px;height:auto;margin:0 auto;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.25)}
-@media print{.bar,.note{display:none}.paper{padding:0}#stage svg{max-width:none;box-shadow:none}@page{size:A4 landscape;margin:0}}
+@media print{.bar,.note,.fbar{display:none}.paper{padding:0}#stage svg{max-width:none;box-shadow:none}@page{size:A4 landscape;margin:0}}
 </style>
 </head>
 <body>
 <div class="bar">
-  <fieldset><legend>主角①</legend><label>名稱 <input id="nm" type="text" value="企鵝"></label>
+  <label>標題 <input id="ttl" type="text" value="大家來找碴！☆ 角落生物篇 ☆" style="width:240px"></label><fieldset><legend>主角①</legend><label>名稱 <input id="nm" type="text" value="" placeholder="可留空"></label>
   <label>角色圖片 <input id="up" type="file" accept="image/*"></label>
   <button id="reset" type="button">預設圖</button>
   <label>低 <input id="n1" type="number" min="0" max="30" value="7"></label>
   <label>中 <input id="n2" type="number" min="0" max="30" value="10"></label>
   <label>高 <input id="n3" type="number" min="0" max="40" value="15"></label></fieldset>
-  <fieldset><legend>角色②（數量 0＝不出現）</legend><label>名稱 <input id="nm2" type="text" value="小熊"></label><label>圖片 <input id="up2" type="file" accept="image/*"></label><button id="reset2" type="button">預設圖</button><label>低 <input id="a1" type="number" min="0" max="30" value="0"></label><label>中 <input id="a2" type="number" min="0" max="30" value="0"></label><label>高 <input id="a3" type="number" min="0" max="40" value="0"></label></fieldset>
-  <fieldset><legend>角色③（數量 0＝不出現）</legend><label>名稱 <input id="nm3" type="text" value="小貓"></label><label>圖片 <input id="up3" type="file" accept="image/*"></label><button id="reset3" type="button">預設圖</button><label>低 <input id="b1" type="number" min="0" max="30" value="0"></label><label>中 <input id="b2" type="number" min="0" max="30" value="0"></label><label>高 <input id="b3" type="number" min="0" max="40" value="0"></label></fieldset>
+  <fieldset><legend>角色②（數量 0＝不出現）</legend><label>名稱 <input id="nm2" type="text" value="" placeholder="可留空"></label><label>圖片 <input id="up2" type="file" accept="image/*"></label><button id="reset2" type="button">預設圖</button><label>低 <input id="a1" type="number" min="0" max="30" value="0"></label><label>中 <input id="a2" type="number" min="0" max="30" value="0"></label><label>高 <input id="a3" type="number" min="0" max="40" value="0"></label></fieldset>
+  <fieldset><legend>角色③（數量 0＝不出現）</legend><label>名稱 <input id="nm3" type="text" value="" placeholder="可留空"></label><label>圖片 <input id="up3" type="file" accept="image/*"></label><button id="reset3" type="button">預設圖</button><label>低 <input id="b1" type="number" min="0" max="30" value="0"></label><label>中 <input id="b2" type="number" min="0" max="30" value="0"></label><label>高 <input id="b3" type="number" min="0" max="40" value="0"></label></fieldset>
   <label>尺寸 <select id="ratio"><option value="a4">A4 橫式</option><option value="169">16:9</option></select></label>
   <label><input id="ans" type="checkbox"> 顯示解答</label>
   <button id="go" class="main" type="button">重新產生</button>
   <button id="dl" type="button">下載 PNG</button>
   <button id="pr" type="button">列印</button>
 </div>
-<div class="note">上傳角色圖後會自動轉成黑白線稿；每次按「重新產生」都是新的版面。勾選「顯示解答」可看到每隻角色的位置與編號。</div>
+<div class="note">上傳角色圖後會自動轉成黑白線稿；每次按「重新產生」都是新的版面。勾選「顯示解答」可看到每隻角色的位置與編號；也可以直接點圖片下方的角色名稱，單獨顯示那個角色的答案（再點一次關閉）。</div>
+<div class="fbar" id="fbar"></div>
 <div class="paper"><div id="stage"></div></div>
 <script>
 const $=id=>document.getElementById(id);
@@ -154,8 +156,8 @@ function scene(w,h,lv,n){
   for(let i=0;i<C.cl;i++){const z=rr(.7,1.15)*(lv==0?1.2:1);for(let t=0;t<40;t++){const x=rr(10,w-10),y=rr(h*.3,h-10);if(C.av==0||ok(x,y,C.av*60*s+16)){items.push([y+10,T(x,y,z,rr(-10,10),pick(ground)())]);break}}}
   items.sort((a,b)=>a[0]-b[0]);
   const rad=60*s;GOT=ans.reduce((a,p)=>(a[p[2]]++,a),[0,0,0]);
-  const a=ans.map((p,i)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${rad.toFixed(1)}" fill="none" stroke="#111" stroke-width="5" stroke-dasharray="${DA[p[2]]}"/><circle cx="${(p[0]+rad*.78).toFixed(1)}" cy="${(p[1]-rad*.78).toFixed(1)}" r="16" fill="#111"/><text x="${(p[0]+rad*.78).toFixed(1)}" y="${(p[1]-rad*.78+5).toFixed(1)}" font-size="13" font-weight="700" text-anchor="middle" fill="#fff">${'ABC'[p[2]]}${i+1}</text>`).join('');
-  return items.map(i=>i[1]).join('')+`<g class="ans">${a}</g>`;
+  const a=ans.map((p,i)=>`<g class="h${p[2]}"><circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${rad.toFixed(1)}" fill="none" stroke="${AC[p[2]]}" stroke-width="5"/><circle cx="${(p[0]+rad*.78).toFixed(1)}" cy="${(p[1]-rad*.78).toFixed(1)}" r="16" fill="${AC[p[2]]}"/><text x="${(p[0]+rad*.78).toFixed(1)}" y="${(p[1]-rad*.78+5).toFixed(1)}" font-size="13" font-weight="700" text-anchor="middle" fill="#fff">${'ABC'[p[2]]}${i+1}</text></g>`).join('');
+  return items.map(i=>i[1]).join('')+`<g class="sol">${a}</g>`;
 }
 
 function build0(){
@@ -184,7 +186,7 @@ function build0(){
   o+='</svg>';
   $('stage').innerHTML=o; toggle();
 }
-function toggle(){const s=$('art');if(s)s.classList.toggle('show',$('ans').checked)}
+const FOC=new Set();function toggle(){const s=$('art');if(!s)return;s.classList.toggle('show',$('ans').checked);[0,1,2].forEach(k=>s.classList.toggle('f'+k,FOC.has(k)));document.querySelectorAll('.fb').forEach(b=>b.classList.toggle('on',FOC.has(+b.dataset.k)))}
 
 // character upload → black/white line art
 function lineArt0(img){
@@ -208,7 +210,7 @@ function lineArt0(img){
 $('up').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{heroURL=lineArt(im);build()};im.src=r.result};r.readAsDataURL(f)};
 $('reset').onclick=()=>{heroURL=null;$('up').value='';build()};
 $('go').onclick=()=>{seed=(seed*7919+Math.floor(Math.random()*9999))%999983;build()};
-['nm','n1','n2','n3','nm2','a1','a2','a3','nm3','b1','b2','b3','ratio'].forEach(i=>$(i).onchange=build);
+['ttl','nm','n1','n2','n3','nm2','a1','a2','a3','nm3','b1','b2','b3','ratio'].forEach(i=>$(i).onchange=build);
 let heroURL2=null,heroURL3=null,GOT=[0,0,0],ACT=[true,false,false];
 function lineArt(img){
   const w=208,h=228,K=5,LR=2.2,c=document.createElement('canvas');c.width=w;c.height=h;const cx=c.getContext('2d',{willReadFrequently:true});
@@ -223,8 +225,10 @@ function lineArt(img){
   const lum=i=>.3*D[i*4]+.59*D[i*4+1]+.11*D[i*4+2],F=[];
   for(let i=0;i<n;i++)if(!bg[i])F.push(i);
   if(F.length<50)return c.toDataURL('image/png');
+  const mid=F.reduce((a,i)=>{const l=lum(i);return a+(l>90&&l<200?1:0)},0);
+  if(mid<F.length*.25){const o=cx.createImageData(w,h);for(const i of F){const k=i*4,v=lum(i)<140?17:255;o.data[k]=o.data[k+1]=o.data[k+2]=v;o.data[k+3]=255}cx.clearRect(0,0,w,h);cx.putImageData(o,0,0);return c.toDataURL('image/png')}
   F.sort((a,b)=>lum(a)-lum(b));
-  let C=[.04,.25,.5,.75,.96].map(q=>{const i=F[Math.floor(q*(F.length-1))];return[D[i*4],D[i*4+1],D[i*4+2]]});
+  let C=[.04,.35,.65,.96].map(q=>{const i=F[Math.floor(q*(F.length-1))];return[D[i*4],D[i*4+1],D[i*4+2]]});
   const lab=new Int8Array(n).fill(-1),lumC=j=>.3*C[j][0]+.59*C[j][1]+.11*C[j][2];
   for(let it=0;it<8;it++){
     const S=C.map(()=>[0,0,0,0]);
@@ -234,13 +238,13 @@ function lineArt(img){
   for(let p=0;p<2;p++){const L2=lab.slice();for(const i of F){const x=i%w,y=(i/w)|0,cnt={};let b=lab[i],bc=0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=w||yy>=h)continue;const l=lab[yy*w+xx];if(l<0)continue;cnt[l]=(cnt[l]||0)+1;if(cnt[l]>bc){bc=cnt[l];b=l}}L2[i]=b}lab.set(L2)}
   const nb=p=>{const x=p%w;return[x>0?p-1:-1,x<w-1?p+1:-1,p>=w?p-w:-1,p<n-w?p+w:-1]};
   const comps=()=>{const seen=new Uint8Array(n),res=[];for(const i of F){if(seen[i])continue;const l=lab[i],q=[i],m=[];seen[i]=1;while(q.length){const p=q.pop();m.push(p);nb(p).forEach(t=>{if(t>=0&&!seen[t]&&lab[t]==l){seen[t]=1;q.push(t)}})}res.push(m)}return res};
-  for(const m of comps()){if(m.length>=35)continue;const cnt={};let b=-1,bc=0;for(const p of m)nb(p).forEach(t=>{if(t<0)return;const l=lab[t];if(l<0||l==lab[p])return;cnt[l]=(cnt[l]||0)+1;if(cnt[l]>bc){bc=cnt[l];b=l}});if(b>=0)m.forEach(p=>lab[p]=b)}
+  for(const m of comps()){if(m.length>=Math.max(35,F.length*.02)||(lumC(lab[m[0]])<90&&m.length>=12))continue;const cnt={};let b=-1,bc=0;for(const p of m)nb(p).forEach(t=>{if(t<0)return;const l=lab[t];if(l<0||l==lab[p])return;cnt[l]=(cnt[l]||0)+1;if(cnt[l]>bc){bc=cnt[l];b=l}});if(b>=0)m.forEach(p=>lab[p]=b)}
   const B=new Uint8Array(n),o=cx.createImageData(w,h);
   for(const m of comps())if(lumC(lab[m[0]])<90&&m.length<450)m.forEach(p=>B[p]=1);
   for(const i of F){const k=i*4,v=B[i]?17:255;o.data[k]=o.data[k+1]=o.data[k+2]=v;o.data[k+3]=255}
   cx.clearRect(0,0,w,h);cx.putImageData(o,0,0);
   cx.fillStyle='#111';cx.beginPath();
-  for(const i of F){const x=i%w,y=(i/w)|0,l=lab[i];const e=t=>{const q=lab[t];return q<0||q<l};if(x==0||y==0||x==w-1||y==h-1||e(i-1)||e(i+1)||e(i-w)||e(i+w)){cx.moveTo(x+LR,y);cx.arc(x,y,LR,0,6.2832)}}
+  for(const i of F){const x=i%w,y=(i/w)|0,l=lab[i];const e=t=>{const q=lab[t];return q<0||(q<l&&Math.hypot(C[q][0]-C[l][0],C[q][1]-C[l][1],C[q][2]-C[l][2])>80)};if(x==0||y==0||x==w-1||y==h-1||e(i-1)||e(i+1)||e(i-w)||e(i+w)){cx.moveTo(x+LR,y);cx.arc(x,y,LR,0,6.2832)}}
   cx.fill();return c.toDataURL('image/png');
 }
 const imgHero=(u,id)=>`<image href='${u}' x='-52' y='-57' width='104' height='114'/>`;
@@ -271,45 +275,52 @@ function lineArt1(img){
   }
   cx.clearRect(0,0,w,h);cx.putImageData(o,0,0);return c.toDataURL('image/png');
 }
-const DA=['10 6','1 0','3 5'];
+const DA=['10 6','1 0','3 5'];const AC=['#e11d1d','#1d4ed8','#15803d'];
 const imgHero0=(u,id)=>`<clipPath id='${id}'><ellipse rx='46' ry='54'/></clipPath><rect x='-46' y='-54' width='92' height='108' fill='#fff'/><image href='${u}' x='-52' y='-60' width='104' height='120' preserveAspectRatio='xMidYMid slice' clip-path='url(#${id})'/><ellipse rx='46' ry='54' fill='none' stroke='#111' stroke-width='3.5'/>`;
 const hero2in=()=>heroURL2?imgHero(heroURL2,'hc2'):CR[0](),hero3in=()=>heroURL3?imgHero(heroURL3,'hc3'):CR[1]();
 const pickCR=()=>{const ex=[];if(ACT[1]&&!heroURL2)ex.push(0);if(ACT[2]&&!heroURL3)ex.push(1);return CR[pick([0,1,2,3,4,5].filter(i=>!ex.includes(i)))]};
 const pk=()=>{const a=[0,1,2].filter(k=>ACT[k]);const k=a.length?pick(a):0;return k?k+1:''};
 const upl=(id,rid,set)=>{$(id).onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{set(lineArt(im));build()};im.src=r.result};r.readAsDataURL(f)};$(rid).onclick=()=>{set(null);$(id).value='';build()}};
-upl('up2','reset2',v=>heroURL2=v);upl('up3','reset3',v=>heroURL3=v);
+const setN=(ids,vals,v)=>{if(!v)ids.forEach(i=>$(i).value=0);else if(ids.every(i=>!+$(i).value))ids.forEach((i,j)=>$(i).value=vals[j])};
+upl('up2','reset2',v=>{heroURL2=v;setN(['a1','a2','a3'],[5,7,10],v)});
+upl('up3','reset3',v=>{heroURL3=v;setN(['b1','b2','b3'],[2,5,7],v)});
 function build(){
-  R=rng(seed);
+  save();R=rng(seed);
   const [W,H]=$('ratio').value=='a4'?[1400,990]:[1600,900];
   const N=[['n1','n2','n3'],['a1','a2','a3'],['b1','b2','b3']].map(r=>r.map(i=>Math.max(0,Math.min(40,Math.floor(+$(i).value||0)))));
   ACT=N.map(r=>r.some(v=>v>0));
   const nm=[$('nm').value||'角色①',$('nm2').value||'角色②',$('nm3').value||'角色③'];
   const hid=k=>'hero'+(k?k+1:''),act=[0,1,2].filter(k=>ACT[k]);
   const rows=Math.max(1,...[0,1,2].map(l=>N.filter(r=>r[l]>0).length));
-  const m=26,gap=20,hh=118,pw=(W-2*m-2*gap)/3,top=m+hh+8,ph=H-top-m,lab=66,box=rows*32+84,sh=ph-lab-box-8;
+  const m=26,gap=20,hh=160,pw=(W-2*m-2*gap)/3,top=m+hh+8,ph=H-top-m,lab=66,box=rows*32+84,sh=ph-lab-box-8;
   const lv=[['★ 初級','適合 1–2 年級'],['★★ 中級','適合 3–4 年級'],['★★★ 進階','適合 5–6 年級']];
+  const ttl=($('ttl').value.trim()||'大家來找碴！').replace(/[<>&]/g,''),tfs=Math.max(22,Math.min(46,Math.floor(900/Math.max(1,[...ttl].length))));
+  const memb=act.map((k,i)=>{const iw=Math.min(300,860/act.length),sx=W/2-iw*act.length/2+i*iw;return T(sx+34,m+118,.36,0,`<use href='#${hid(k)}'/>`)+`<text x='${sx+62}' y='${m+126}' font-size='24' font-weight='800'>${nm[k]}</text>`}).join('');
   const names=act.length?act.map(k=>nm[k]).join('、'):'角色';
-  let o=`<svg xmlns='http://www.w3.org/2000/svg' id='art' viewBox='0 0 ${W} ${H}' font-family='Noto Sans TC,PingFang TC,Microsoft JhengHei,sans-serif'><style>.ans{display:none}.show .ans{display:inline}</style><defs><g id='hero'>${heroInner()}</g><g id='hero2'>${hero2in()}</g><g id='hero3'>${hero3in()}</g></defs><rect width='${W}' height='${H}' fill='#fff'/><rect x='8' y='8' width='${W-16}' height='${H-16}' rx='26' fill='none' stroke='#111' stroke-width='4'/><rect x='${W/2-420}' y='${m-6}' width='840' height='${hh-8}' rx='48' fill='#fff' stroke='#111' stroke-width='4'/><text x='${W/2}' y='${m+48}' font-size='48' font-weight='900' text-anchor='middle'>大家來找碴！☆ 角落生物篇 ☆</text><text x='${W/2}' y='${m+88}' font-size='23' font-weight='700' text-anchor='middle'>找找看，圖中藏了幾隻「${names}」？戴著配件的也要算喔！找到後圈起來！</text>${T(m+70,m+50,.9,-6,`<use href='#${hid(act[0]||0)}'/>`)}${T(W-m-70,m+50,.9,6,`<use href='#${hid(act.length?act[act.length-1]:0)}'/>`,-1)}`;
+  let o=`<svg xmlns='http://www.w3.org/2000/svg' id='art' viewBox='0 0 ${W} ${H}' font-family='Noto Sans TC,PingFang TC,Microsoft JhengHei,sans-serif'><style>.ans{display:none}.show .ans{display:inline}.f0 .ans.d0,.f1 .ans.d1,.f2 .ans.d2{display:inline}.sol g{display:none}.show .sol g,.f0 .sol .h0,.f1 .sol .h1,.f2 .sol .h2{display:inline}</style><defs><g id='hero'>${heroInner()}</g><g id='hero2'>${hero2in()}</g><g id='hero3'>${hero3in()}</g></defs><rect width='${W}' height='${H}' fill='#fff'/><rect x='8' y='8' width='${W-16}' height='${H-16}' rx='26' fill='none' stroke='#111' stroke-width='4'/><rect x='${W/2-480}' y='${m-6}' width='960' height='${hh-6}' rx='48' fill='#fff' stroke='#111' stroke-width='4'/><text x='${W/2}' y='${m+46}' font-size='${tfs}' font-weight='900' text-anchor='middle'>${ttl}</text><text x='${W/2}' y='${m+80}' font-size='22' font-weight='700' text-anchor='middle'>找找看，圖中藏了幾隻角色？戴著配件的也要算喔！找到後圈起來！</text>${T(m+70,m+50,.9,-6,`<use href='#${hid(act[0]||0)}'/>`)}${memb}${T(W-m-70,m+50,.9,6,`<use href='#${hid(act.length?act[act.length-1]:0)}'/>`,-1)}`;
   for(let i=0;i<3;i++){
     const x=m+i*(pw+gap),sc=scene(pw,sh,i,[N[0][i],N[1][i],N[2][i]]),got=GOT.slice(),tot=got[0]+got[1]+got[2];
     o+=`<clipPath id='cp${i}'><rect width='${pw}' height='${sh}'/></clipPath><rect x='${x}' y='${top}' width='${pw}' height='${ph}' rx='22' fill='#fff' stroke='#111' stroke-width='3.5'/><text x='${x+pw/2}' y='${top+32}' font-size='28' font-weight='900' text-anchor='middle'>${lv[i][0]}</text><text x='${x+pw/2}' y='${top+57}' font-size='18' font-weight='700' text-anchor='middle'>${lv[i][1]}</text><g transform='translate(${x} ${top+lab})'><rect width='${pw}' height='${sh}' fill='#fff' stroke='#111' stroke-width='3'/><g clip-path='url(#cp${i})'>${sc}</g></g>`;
     const y0=top+lab+sh+26;
     o+=`<text x='${x+pw/2}' y='${y0}' font-size='20' font-weight='700' text-anchor='middle'>找到的角色各有幾隻？</text>`;
     let r=0;
-    [0,1,2].forEach(k=>{if(!got[k])return;const y=y0+8+r*32;o+=`${T(x+38,y+16,.27,0,`<use href='#${hid(k)}'/>`)}<text x='${x+66}' y='${y+23}' font-size='19' font-weight='700'>${nm[k]}</text><rect x='${x+pw-150}' y='${y+3}' width='62' height='26' rx='9' fill='#fff' stroke='#111' stroke-width='2.5'/><text x='${x+pw-76}' y='${y+25}' font-size='22' font-weight='900'>/ ${got[k]}</text>`;r++});
+    [0,1,2].forEach(k=>{if(!got[k])return;const y=y0+8+r*32;o+=`<g data-k='${k}' style='cursor:pointer'><rect x='${x+10}' y='${y}' width='${pw-190}' height='32' rx='8' fill='#fff' fill-opacity='0'/>${T(x+38,y+16,.27,0,`<use href='#${hid(k)}'/>`)}<text x='${x+66}' y='${y+23}' font-size='19' font-weight='700'>${nm[k]}</text></g><g class='ans d${k}'><circle cx='${x+pw-168}' cy='${y+16}' r='7' fill='${AC[k]}'/></g><rect x='${x+pw-150}' y='${y+3}' width='62' height='26' rx='9' fill='#fff' stroke='#111' stroke-width='2.5'/><text x='${x+pw-76}' y='${y+25}' font-size='22' font-weight='900'>/ ${got[k]}</text>`;r++});
     o+=`<path d='M${x+24} ${y0+10+r*32}h${pw-48}' stroke='#111' stroke-width='2' stroke-dasharray='3 6'/><text x='${x+pw/2}' y='${y0+38+r*32}' font-size='24' font-weight='900' text-anchor='middle'>全部共 ${tot} 隻</text>`;
   }
   o+='</svg>';
-  $('stage').innerHTML=o;toggle();
+  $('stage').innerHTML=o;$('fbar').innerHTML=act.length?'<span>單獨看某角色的解答：</span>'+act.map(k=>`<button type="button" class="fb" data-k="${k}"><i style="background:${AC[k]}"></i>${nm[k].replace(/[<>&]/g,'')}</button>`).join(''):'';toggle();
 }
-$('ans').onchange=toggle;
+$('ans').onchange=toggle;document.addEventListener('click',e=>{const g=e.target.closest&&e.target.closest('[data-k]');if(!g)return;const k=+g.getAttribute('data-k');FOC.has(k)?FOC.delete(k):FOC.add(k);$('ans').checked=false;toggle()});
 $('pr').onclick=()=>window.print();
 $('dl').onclick=()=>{
   const s=$('art'),vb=s.viewBox.baseVal,xml=new XMLSerializer().serializeToString(s),img=new Image();
-  img.onload=()=>{const c=document.createElement('canvas');c.width=vb.width*2;c.height=vb.height*2;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);c.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=$('ans').checked?'找碴-解答.png':'找碴.png';a.click()})};
+  img.onload=()=>{const c=document.createElement('canvas');c.width=vb.width*2;c.height=vb.height*2;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);c.toBlob(async b=>{const bad='/:*?"<>|☆★！!'+String.fromCharCode(92),t=[...($('ttl').value.trim()||'大家來找碴')].filter(ch=>!bad.includes(ch)).join('').trim().replace(/ +/g,'_').slice(0,40)||'找碴',dt=new Date(),ds=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'),act2=[...document.querySelectorAll('.fb')].map(b=>+b.dataset.k),fk=[...FOC].filter(k=>act2.includes(k)).sort(),sel=$('ans').checked?'全部':(fk.length?(fk.length==act2.length?'全部':fk.map(k=>[...($(['nm','nm2','nm3'][k]).value.trim()||'角'+(k+1))].filter(ch=>!bad.includes(ch)).join('').replace(/ +/g,'_')||'角'+(k+1)).join('、')):''),fn=t+(sel?'-解答-'+sel:'')+'-'+ds+'.png';try{const d=window.claude?await window.claude.use('downloads'):null;if(d)await d.save({filename:fn,data:b});else{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click()}}catch(err){if(!err||err.code!=='declined')alert('無法下載，請改用截圖或列印。')}})};
   img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(xml);
 };
-build();
+const SK='findPenguinV2',NID=['n1','n2','n3','a1','a2','a3','b1','b2','b3'];
+function save(){try{localStorage.setItem(SK,JSON.stringify({n:[$('nm').value,$('nm2').value,$('nm3').value],u:[heroURL,heroURL2,heroURL3],c:NID.map(i=>$(i).value),t:$('ttl').value}))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(SK)||'null');if(!d)return;$('nm').value=d.n[0]||'';$('nm2').value=d.n[1]||'';$('nm3').value=d.n[2]||'';if(d.t!=null)$('ttl').value=d.t;heroURL=d.u[0]||null;heroURL2=d.u[1]||null;heroURL3=d.u[2]||null;if(d.c&&d.c.length==9)NID.forEach((i,j)=>$(i).value=d.c[j])}catch(e){}}
+load();build();
 </script>
 </body>
 </html>
