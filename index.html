@@ -3,7 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>大家來找碴產生器</title>
+<title>大家來找碴產生器｜依年級難度製作 A4 黑白找角色學習單</title>
+<meta name="description" content="大家來找碴產生器：自訂主題與最多三個角色，依低、中、高年級自動產生黑白隱藏角色學習單，附解答，可列印 A4 或下載 PNG。">
+<meta name="keywords" content="大家來找碴,找角色,隱藏圖片,找東西學習單,黑白線稿,可列印,低年級,中年級,高年級,教學工具">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:title" content="大家來找碴產生器">
+<meta property="og:description" content="自訂主題與角色，依年級難度自動產生黑白找角色學習單，附解答，可列印或下載。">
+<meta name="twitter:card" content="summary">
+<!-- 上線後請在此補上：<link rel="canonical" href="你的網址"> 與 og:url、og:image -->
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"大家來找碴產生器","description":"依低、中、高年級難度，自動產生黑白隱藏角色（找碴）學習單的線上工具，可自訂主題、最多三個角色，並提供解答、列印與 PNG 下載。","applicationCategory":"EducationalApplication","operatingSystem":"Any","inLanguage":"zh-TW","audience":{"@type":"EducationalAudience","educationalRole":"teacher"},"featureList":["低中高三種難度","最多三個角色，各自設定名稱、圖片與數量","自動計算每個年級的角色總數","解答可依角色用不同顏色顯示","A4 橫式或 16:9，可列印或下載 PNG"]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"什麼是大家來找碴產生器？","acceptedAnswer":{"@type":"Answer","text":"這是一個線上工具，可依年級難度自動產生黑白的找角色學習單，每次重新產生都會得到不同版面，並附有解答。"}},{"@type":"Question","name":"可以自訂角色和主題嗎？","acceptedAnswer":{"@type":"Answer","text":"可以。標題可自由修改，最多設定三個角色，每個角色可輸入名稱、上傳圖片，並分別設定低、中、高年級的數量。"}},{"@type":"Question","name":"低、中、高年級的難度有什麼不同？","acceptedAnswer":{"@type":"Answer","text":"低年級角色較大且完整露出；中年級角色較小，部分被灌木遮住；高年級角色最小，會旋轉、翻轉並大量躲藏，還混入戴配件的角色，配件角色也要一併計算。"}},{"@type":"Question","name":"畫面下方顯示的數量準確嗎？","acceptedAnswer":{"@type":"Answer","text":"數量是在畫面產生後，直接計算圖中實際放置的各角色數量，並顯示每個角色與全部的總數，因此會與圖中一致。"}},{"@type":"Question","name":"如何列印或儲存？","acceptedAnswer":{"@type":"Answer","text":"選擇 A4 橫式後按「列印」，或按「下載 PNG」。勾選「顯示解答」可輸出解答版。"}}]},{"@type":"HowTo","name":"如何製作大家來找碴學習單","step":[{"@type":"HowToStep","text":"輸入標題，並設定角色名稱與圖片。"},{"@type":"HowToStep","text":"設定每個角色在低、中、高年級的數量，數量填 0 代表不出現。"},{"@type":"HowToStep","text":"選擇 A4 橫式或 16:9，按「重新產生」。"},{"@type":"HowToStep","text":"按「列印」或「下載 PNG」；勾選「顯示解答」可取得解答版。"}]}]}</script>
 <style>
 :root{--bg:#f3f1ee;--bar:#fff;--ink:#1b1b1b;--line:#1b1b1b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#222;--bar:#2e2e2e;--ink:#eee;--line:#eee}}
@@ -17,11 +27,12 @@ button{font:inherit;font-size:14px;padding:7px 14px;border:2px solid var(--line)
 button.main{background:var(--ink);color:var(--bar)}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #888;outline-offset:2px}
 fieldset{border:2px solid var(--line);border-radius:12px;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:6px 10px;margin:0}legend{font-size:13px;font-weight:700;padding:0 6px}
+.about{max-width:900px;margin:0 auto;padding:8px 16px 40px;font-size:14px;line-height:1.7}.about h2{font-size:18px}.about h3{font-size:15px;margin:14px 0 2px}.about p{margin:0}
 .fbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:4px 16px 0;font-size:14px}.fb{display:inline-flex;gap:6px;align-items:center;padding:5px 12px}.fb i{width:12px;height:12px;border-radius:50%;display:inline-block}.fb.on{background:var(--ink);color:var(--bar)}
 .note{font-size:12.5px;opacity:.75;padding:8px 16px}
 .paper{padding:16px;overflow-x:auto}
 #stage svg{display:block;width:100%;max-width:1400px;height:auto;margin:0 auto;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.25)}
-@media print{.bar,.note,.fbar{display:none}.paper{padding:0}#stage svg{max-width:none;box-shadow:none}@page{size:A4 landscape;margin:0}}
+@media print{.bar,.note,.fbar,.about,.pgh{display:none}.paper{padding:0}#stage svg{max-width:none;box-shadow:none}@page{size:A4 landscape;margin:0}}
 </style>
 </head>
 <body>
@@ -41,8 +52,23 @@ fieldset{border:2px solid var(--line);border-radius:12px;display:flex;flex-wrap:
   <button id="pr" type="button">列印</button>
 </div>
 <div class="note">上傳角色圖後會自動轉成黑白線稿；每次按「重新產生」都是新的版面。勾選「顯示解答」可看到每隻角色的位置與編號；也可以直接點圖片下方的角色名稱，單獨顯示那個角色的答案（再點一次關閉）。</div>
+<h1 class="pgh" style="font-size:18px;margin:6px 16px 0">大家來找碴產生器</h1>
 <div class="fbar" id="fbar"></div>
 <div class="paper"><div id="stage"></div></div>
+<noscript><p style="padding:16px">此工具需要開啟瀏覽器的 JavaScript 才能產生大家來找碴學習單。</p></noscript>
+<section class="about">
+<h2>關於大家來找碴產生器</h2>
+<p>大家來找碴產生器是一個線上工具，可依低、中、高年級的程度，自動產生黑白的找角色學習單，並提供解答。你可以自訂標題主題、最多三個角色的名稱與圖片，以及各年級的數量。</p>
+<h2>常見問題</h2>
+<h3>低、中、高年級的難度有什麼不同？</h3>
+<p>低年級角色較大且完整露出；中年級角色較小，部分被灌木遮住；高年級角色最小，會旋轉、翻轉並大量躲藏，還混入戴配件的角色，配件角色也要一併計算。</p>
+<h3>畫面下方顯示的數量準確嗎？</h3>
+<p>數量是在畫面產生後，直接計算圖中實際放置的各角色數量，並顯示每個角色與全部的總數，因此會與圖中一致。</p>
+<h3>如何列印或儲存？</h3>
+<p>選擇 A4 橫式後按「列印」，或按「下載 PNG」。勾選「顯示解答」可輸出解答版，也可以點角色按鈕單獨顯示某個角色的答案。</p>
+<h3>我上傳的角色圖片會被傳到伺服器嗎？</h3>
+<p>圖片是在你的瀏覽器裡轉成線稿，名稱、圖片與設定只記在你的瀏覽器，不會由這個工具上傳。</p>
+</section>
 <script>
 const $=id=>document.getElementById(id);
 let heroURL=null,seed=(Date.now()%99991)+7,R;
@@ -320,6 +346,11 @@ $('dl').onclick=()=>{
 const SK='findPenguinV2',NID=['n1','n2','n3','a1','a2','a3','b1','b2','b3'];
 function save(){try{localStorage.setItem(SK,JSON.stringify({n:[$('nm').value,$('nm2').value,$('nm3').value],u:[heroURL,heroURL2,heroURL3],c:NID.map(i=>$(i).value),t:$('ttl').value}))}catch(e){}}
 function load(){try{const d=JSON.parse(localStorage.getItem(SK)||'null');if(!d)return;$('nm').value=d.n[0]||'';$('nm2').value=d.n[1]||'';$('nm3').value=d.n[2]||'';if(d.t!=null)$('ttl').value=d.t;heroURL=d.u[0]||null;heroURL2=d.u[1]||null;heroURL3=d.u[2]||null;if(d.c&&d.c.length==9)NID.forEach((i,j)=>$(i).value=d.c[j])}catch(e){}}
+const GA_ID='';/* 在此填入你的 GA4 評估 ID，格式 G-XXXXXXXXXX */
+(function(){if(!/^G-[A-Z0-9]{6,}$/.test(GA_ID))return;const s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID;document.head.appendChild(s);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config',GA_ID)})();
+const track=(n,p)=>{try{if(window.gtag)gtag('event',n,p||{})}catch(e){}};
+['go','dl','pr'].forEach(id=>$(id).addEventListener('click',()=>track('worksheet_'+id)));
+['up','up2','up3'].forEach(id=>$(id).addEventListener('change',()=>track('character_upload')));
 load();build();
 </script>
 </body>

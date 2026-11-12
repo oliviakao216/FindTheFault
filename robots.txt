@@ -1,0 +1,29 @@
+# robots.txt — 請放在網站根目錄（例如 https://example.com/robots.txt）
+# 上線前請把下方的 example.com 換成你的網域
+
+User-agent: *
+Allow: /
+
+# 允許主要 AI 搜尋與問答爬蟲（若不想被 AI 引用，可將對應的 Allow 改成 Disallow）
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://example.com/sitemap.xml
